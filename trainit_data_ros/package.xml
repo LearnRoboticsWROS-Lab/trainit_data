@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>trainit_data_ros</name>
+  <version>0.9.0</version>
+  <description>
+    TrainIt Data Foundation, live acquisition (ADR-0029): the recorder that reads the ROS camera
+    contract of trainit_hardware_layer (mock / Isaac / real alike) and writes trainit_data's canonical
+    records, its triggers, and the replay publisher. TSA configures, launches and observes it; it never
+    runs inside TSA, and a bundle runs it without TSA. Slice D0.2: the recorder (MANUAL + INTERVAL triggers,
+    the FIRST_AT_OR_AFTER_BOUNDARY v1 sync policy) and the replay publisher.
+  </description>
+  <maintainer email="ros.master.ai@gmail.com">fra</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ADR-0029 Decision 1: the only TrainIt dependencies are trainit_data, trainit_hardware_layer and (since D0.5,
+       ExecutionEvent) trainit_interfaces. Never TSA, TMR, TP, Pro or a cell. -->
+  <exec_depend>trainit_data</exec_depend>
+  <exec_depend version_gte="0.3.0">trainit_hardware_layer</exec_depend>
+  <exec_depend version_gte="0.3.0">trainit_interfaces</exec_depend>   <!-- D0.5: ExecutionEvent (ADR-0030) -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,32 @@
+{
+  "schema": "trainit-vocab/1.0",
+  "transports": ["LIVE_ROS", "INGEST"],
+  "backends": ["mock", "isaac", "real", "replay"],
+  "sim_sources": ["isaac", "gazebo"],
+  "modalities": {
+    "rgb": {"data_block": "image", "encodings": ["rgb8"], "payloads": ["image/png"]},
+    "depth": {"data_block": "image", "encodings": ["16UC1", "32FC1"],
+              "payloads": ["image/png;bits=16", "application/x-npy"], "unit_scale_required": true},
+    "instance_segmentation": {"data_block": "instance_image", "encodings": ["16UC1"], "payloads": ["image/png;bits=16"]}
+  },
+  "encodings": {
+    "rgb8": {"dtype": "uint8", "channels": 3},
+    "16UC1": {"dtype": "uint16", "channels": 1},
+    "32FC1": {"dtype": "float32", "channels": 1}
+  },
+  "data_blocks": {"image": {"version": "1.0"}, "instance_image": {"version": "1.0"}},
+  "payload_kinds_reserved": ["series_chunk"],
+  "stamp_origins": ["HEADER", "DRIVER_GLOBAL_TIME", "RENDER_TICK", "RECEIPT", "NODE_CLOCK"],
+  "trigger_kinds": ["MANUAL", "INTERVAL", "EVENT", "APPLICATION_STATE", "SYNTHETIC_FRAME"],
+  "trigger_origins": ["OPERATOR", "TIMER", "EXECUTION_EVENT", "EXTERNAL", "GENERATOR"],
+  "context_namespaces": ["trainit.task_step", "trainit.pick_attempt", "trainit.randomization"],
+  "sync_policies": {"FIRST_AT_OR_AFTER_BOUNDARY": {"versions": [1]}, "SAME_RENDER_TICK": {"versions": [1]},
+                    "FIRST_ALIGNED_AT_OR_AFTER_BOUNDARY": {"versions": [1]}},
+  "missing_reasons": ["TIMEOUT", "NO_CAMERA_INFO", "CLOCK_UNAVAILABLE", "CLOCK_MISMATCH", "INCOMPATIBLE_CLOCKS",
+                      "FRAME_MISMATCH", "CALIBRATION_MISMATCH", "REGISTRATION_MISMATCH", "TF_UNAVAILABLE", "ENCODING_REFUSED",
+                      "WRITE_FAILED"],
+  "label_sources": ["SYNTHETIC_GROUND_TRUTH", "HUMAN", "IMPORTED", "MODEL_PREDICTION"],
+  "intrinsic_provenance": ["DEVICE_REPORTED", "SYNTHETIC_RENDER", "MEASURED_INTRINSIC_CAL", "NOMINAL_PROFILE"],
+  "extrinsic_provenance": ["NOMINAL_DESCRIPTION", "MEASURED_HAND_EYE", "SYNTHETIC_SCENE"],
+  "derivation_ops": ["CREATE", "ADD_SESSIONS", "FILTER", "RELABEL", "RESPLIT"]
+}

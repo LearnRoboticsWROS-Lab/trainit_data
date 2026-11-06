@@ -1,0 +1,34 @@
+# trainit-recording/1.0 -- a PHYSICAL RealSense D455 on its own (a tripod or a bench mount), D0.4 / D0-C.
+#
+# The SAME schema and recorder as every other source: nothing here is RealSense-specific except the profile name.
+# The camera runs under trainit_hardware_layer's real backend:
+#     ros2 launch trainit_hardware_layer realsense_camera.launch.py standalone_description:=true
+# The recorder resolves topics / frames from the camera contract and the hardware profile, the source descriptor
+# (DEVICE_REPORTED, DRIVER_GLOBAL_TIME, driver_align_depth) from the profile's `real` backend, the tolerance from the
+# profile's frame rate, and stores the EFFECTIVE configuration in each session. The data store is TRAINIT_DATA_ROOT
+# (default ~/TrainItData), never set here.
+schema: trainit-recording/1.0
+source: {backend: real}
+rights: {classification: INTERNAL}
+sensors:
+  - sensor_id: bench_camera
+    profile: realsense_d455
+    streams: {color: {}, depth: {}}
+    # The camera's source document (device, USB attachment, acquisition host, driver configuration, OBSERVED clock
+    # domain) is REQUIRED: a physical-camera session without it could not say which device produced it. It is also
+    # checked against the descriptor: an observed stamp origin other than DRIVER_GLOBAL_TIME refuses the session.
+    source_info: {required: true}
+    # The camera's NOMINAL frames from the standalone description (no cell, no hand-eye calibration): recorded as
+    # NOMINAL_DESCRIPTION with the description's hash, never as a measurement.
+    extrinsic_parent_frame: camera_mount
+triggers:
+  - {id: manual, kind: MANUAL}
+  - {id: every_500ms, kind: INTERVAL, period_ms: 500, max_captures: 40}
+# The driver stamps colour and aligned depth of one frameset with ONE stamp: a skew means another frameset (33 ms at
+# 30 fps), beyond the default tolerance (half a frame period) -- such a capture is PARTIAL, never COMPLETE.
+sync: {policy: FIRST_AT_OR_AFTER_BOUNDARY, policy_version: 1, timeout_ms: 1000}
+provenance:
+  description:
+    package: trainit_hardware_layer
+    file: urdf/d455_standalone.urdf.xacro
+    args: {name: camera}

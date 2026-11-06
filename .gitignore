@@ -1,0 +1,16 @@
+# Python / colcon build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+install/
+log/
+
+# Captured data never lives in this repository (ADR-0029): the data store is ~/TrainItData
+# (TRAINIT_DATA_ROOT). These patterns stop a store or an export placed here by mistake; the pre-push
+# guard refuses payload files that slip through.
+**/TrainItData/
+captures.jsonl
+draws.jsonl
+trainit_export.json

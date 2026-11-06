@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>trainit_data</name>
+  <version>0.9.0</version>
+  <description>
+    TrainIt Data Foundation, the canonical core (ADR-0029). TrainIt's persisted data contracts --
+    observations, captures, sessions, calibration records, dataset versions, labels, splits, exports --
+    in pure Python, with no ROS, simulator or training-framework dependency, so a training or provider
+    environment and Isaac's own Python can use it without the ROS tree. External formats (YOLO, COCO,
+    LeRobotDataset, MCAP) are exporters, never the canonical model. Live ROS acquisition is the sibling
+    package trainit_data_ros. Slice D0.1: the records, the vocabulary, the store, the crash-safe session writer,
+    verify / recover and the trainit-data CLI (inspect, verify, recover). Slice D0.6: datasets, immutable
+    content-hashed versions, label sets, group-aware splits, the YOLO detection exporter and label importer.
+  </description>
+  <maintainer email="ros.master.ai@gmail.com">fra</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ADR-0029 Decision 1: the stdlib, numpy and Pillow only; NO TrainIt package, no rclpy. -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,17 @@
+{
+  "recipe": "isaac_replicator_bin/1",
+  "resolution": [640, 480],
+  "rt_subframes": 8,
+  "warmup_steps": 3,
+  "settle_steps": 6,
+  "camera": {"height_m": 0.6, "focal_length": 18.0, "horizontal_aperture": 20.955, "clipping_m": [0.01, 100.0]},
+  "tray": {"inner_m": [0.40, 0.30], "wall_height_m": 0.05, "wall_thickness_m": 0.01},
+  "classes": ["cube", "cylinder", "sphere"],
+  "objects_per_run": [4, 9],
+  "object_size_m": [0.035, 0.07],
+  "placement": {"margin_m": 0.005, "attempts": 200},
+  "color_range": [0.1, 0.9],
+  "lights": {"dome_intensity": [150.0, 600.0], "key_intensity": [400.0, 2000.0],
+             "key_elevation_deg": [35.0, 80.0], "key_azimuth_deg": [0.0, 360.0]},
+  "decimals": 6
+}

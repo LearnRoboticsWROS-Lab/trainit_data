@@ -1,0 +1,16 @@
+# trainit-recording/1.0 -- the mock RGB-D camera of trainit_hardware_layer, MANUAL + INTERVAL triggers.
+# Only what is chosen here is written; the recorder resolves every default (topics and frames from the camera
+# contract and the hardware profile, the tolerance from the profile's frame rate) and stores the EFFECTIVE
+# configuration in the session. The data store is TRAINIT_DATA_ROOT (default ~/TrainItData), never set here.
+schema: trainit-recording/1.0
+source: {backend: mock}
+rights: {classification: INTERNAL}
+sensors:
+  - sensor_id: overhead_camera
+    profile: realsense_d455
+    streams: {color: {}, depth: {}}
+    extrinsic_parent_frame: base_link
+triggers:
+  - {id: manual, kind: MANUAL}
+  - {id: every_2s, kind: INTERVAL, period_ms: 2000, max_captures: 50}
+sync: {policy: FIRST_AT_OR_AFTER_BOUNDARY, policy_version: 1, timeout_ms: 1000}
