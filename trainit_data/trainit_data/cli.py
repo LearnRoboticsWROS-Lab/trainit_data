@@ -1,5 +1,6 @@
 """The ``trainit-data`` command line (D0.1: inspect, verify, recover; D0.6: dataset, version, labels, export,
-verify --dataset, verify-export; D0.7: labels from-synthetic, version create --group-by, compare-generation).
+verify --dataset, verify-export; D0.7: labels from-synthetic, version create --group-by, compare-generation;
+M4.5: export yolo --task segment).
 
 The Python API (``Store``, ``verify_session``, ``recover_session``) is authoritative; the CLI is a thin
 front end. ``--json`` prints ONE object of the stable machine schema ``trainit-cli/1``::
@@ -194,6 +195,9 @@ def _export_yolo(store, args):
     config = {'task': args.task, 'allow_mixed_provenance': args.allow_mixed_provenance}
     if args.label_set:
         config['label_sets'] = args.label_set
+    for name in ('epsilon_px', 'min_area_px'):                 # task segment only (the exporter refuses them else)
+        if getattr(args, name) is not None:
+            config[name] = getattr(args, name)
     sidecar = get_exporter('yolo').export(store, args.dataset, args.version, args.destination, config)
     return True, {'export': {'destination': str(Path(args.destination).expanduser().resolve()),
                              'export_id': sidecar['export_id'], 'exporter': sidecar['exporter'],
@@ -291,7 +295,16 @@ def _human(command, ok, result, error):
         e = result['export']
         lines.append(f'{e["export_id"]} -> {e["destination"]}  ({e["files"]} files, rights '
                      f'{e["rights"]["classification"]})')
-        lines += [f'  {k}: {n["images"]} image(s), {n["boxes"]} box(es)' for k, n in e['summary']['splits'].items()]
+        if e['summary']['task'] == 'detect':
+            lines += [f'  {k}: {n["images"]} image(s), {n["boxes"]} box(es)' for k, n in e['summary']['splits'].items()]
+        else:
+            lines += [f'  {k}: {n["images"]} image(s), {n["instances"]} polygon(s)'
+                      for k, n in e['summary']['splits'].items()]
+            p = e['summary']['polygons']
+            lines.append(f'  polygons: {p["exported"]} of {p["instances"]} instance(s), {p["dropped_instances"]} '
+                         f'dropped, {p["dropped_components"]} smaller component(s) dropped '
+                         f'({p["dropped_component_pixels"]} px); epsilon_px={p["policy"]["epsilon_px"]} '
+                         f'min_area_px={p["policy"]["min_area_px"]}')
     elif command == 'compare-generation':
         lines.append(f'{"REPRODUCIBLE" if result["reproducible"] else "NOT REPRODUCIBLE"} (claim SAME_DRAWS): '
                      f'{result["frames"]["a"]} / {result["frames"]["b"]} frames, {result["runs"]} run(s)')
@@ -406,12 +419,16 @@ def build_parser():
     c.add_argument('label_set', nargs='?')
 
     p = sub.add_parser('export', help='export a dataset version').add_subparsers(dest='action', required=True)
-    c = p.add_parser('yolo', help='YOLO detection export (segmentation is deferred)')
+    c = p.add_parser('yolo', help='YOLO detection (BBOX_2D) or segmentation (INSTANCE_MASK) export')
     c.add_argument('dataset')
     c.add_argument('version', type=int)
     c.add_argument('destination', help='a missing or empty directory outside any repository and the store')
-    c.add_argument('--label-set', action='append', help='BBOX_2D label sets to export (default: all of the version)')
+    c.add_argument('--label-set', action='append', help='label sets to export: BBOX_2D for detect, INSTANCE_MASK for '
+                   'segment (default: all of that kind in the version)')
     c.add_argument('--task', default='detect', choices=['detect', 'segment'])
+    c.add_argument('--epsilon-px', type=float, help='segment: the Douglas-Peucker tolerance in pixels (default 0.5)')
+    c.add_argument('--min-area-px', type=int, help='segment: drop an instance whose kept component has fewer pixels '
+                   '(default 16)')
     c.add_argument('--allow-mixed-provenance', action='store_true')
 
     p = sub.add_parser('verify-export', help='check an export against its sidecar and the store (read-only)')

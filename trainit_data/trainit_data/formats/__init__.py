@@ -6,8 +6,9 @@ the edge, never the layout. An exporter turns ONE dataset version into an extern
 back into a canonical label set. Both are pure (stdlib + numpy + Pillow): no training framework is imported, so
 an export is plain files that a trainer reads in its own environment.
 
-Registered in D0.6: ``yolo`` (YOLO DETECTION: ``trainit_data.formats.yolo``). Segmentation export is DEFERRED:
-it needs contour extraction, and cv2 is not a core dependency.
+Registered: ``yolo`` (``trainit_data.formats.yolo``): YOLO DETECTION (D0.6) and, since exporter version 1.1 (M4.5),
+YOLO SEGMENTATION of INSTANCE_MASK label sets. Its contour extraction is ``formats._polygons``: pure numpy and
+integer Python, no cv2 (cv2 is not a core dependency).
 
 The registry contract of an exporter: ``name``, ``version``, ``content_kinds``, ``label_kinds``,
 ``export(store, dataset_id, version, destination, config) -> sidecar`` and ``verify(destination, sidecar) ->

@@ -29,7 +29,8 @@ PUBLIC API (slices D0.1, D0.6 and D0.7). Import from these modules; everything e
                        ``compare_generations`` (D0-G)
 ``ground_truth``       D0.7: ``create_synthetic_label_set`` (recorded annotator output -> SYNTHETIC_GROUND_TRUTH)
 ``exports``            the export sidecar (``trainit-export/1.0``), ``verify_export``
-``formats``            the exporter registry; ``formats.yolo``: YOLO detection export + ``import_yolo_labels``
+``formats``            the exporter registry; ``formats.yolo``: YOLO detection and (M4.5) segmentation export +
+                       ``import_yolo_labels``
 ``cli``                the ``trainit-data`` command (``--json``: ``trainit-cli/1``)
 =====================  =================================================================================
 
@@ -50,9 +51,9 @@ its pinned vocabulary and its calibrations live in the store beside it.
 
 NOT in the core (by scope): ingest adapters (``trainit_data.adapters``; D0.7: ``isaac_replicator``, pure numpy, no
 Isaac import; the core never imports them),
-EPISODES content (D1; reserved, refused until its reader exists), external-format adapters beyond YOLO detection
-(segmentation, COCO, LeRobot: later slices), and any training framework. Live ROS acquisition is the sibling
+EPISODES content (D1; reserved, refused until its reader exists), external-format adapters beyond YOLO detection /
+segmentation (COCO, LeRobot: later slices), and any training framework. Live ROS acquisition is the sibling
 package ``trainit_data_ros`` (D0.2).
 """
 
-__version__ = '0.9.0'
+__version__ = '0.10.0'

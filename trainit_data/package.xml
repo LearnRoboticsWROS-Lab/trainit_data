@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>trainit_data</name>
-  <version>0.9.0</version>
+  <version>0.10.0</version>
   <description>
     TrainIt Data Foundation, the canonical core (ADR-0029). TrainIt's persisted data contracts --
     observations, captures, sessions, calibration records, dataset versions, labels, splits, exports --
@@ -12,6 +12,7 @@
     package trainit_data_ros. Slice D0.1: the records, the vocabulary, the store, the crash-safe session writer,
     verify / recover and the trainit-data CLI (inspect, verify, recover). Slice D0.6: datasets, immutable
     content-hashed versions, label sets, group-aware splits, the YOLO detection exporter and label importer.
+    M4.5: the YOLO segmentation export of INSTANCE_MASK label sets (pure-numpy contour extraction).
   </description>
   <maintainer email="ros.master.ai@gmail.com">fra</maintainer>
   <license>Apache-2.0</license>

@@ -128,9 +128,17 @@ def test_an_export_never_overwrites_never_lands_in_git_or_in_the_store(version, 
     assert e.value.code == 'EXPORT_DESTINATION_INVALID'
 
 
-def test_segmentation_is_deferred_and_refused(version, tmp_path):
-    with pytest.raises(DataError, match='DEFERRED') as e:
-        YOLO.export(version[0], 'parts', 1, tmp_path / 'out', {'task': 'segment'})
+def test_segmentation_without_an_instance_mask_label_set_is_refused(version, tmp_path):
+    """D0.6 deferred task segment; M4.5 implements it over INSTANCE_MASK label sets only (test_m45_segment.py):
+    a version holding BBOX_2D label sets alone has nothing to segment, and a box is never turned into a polygon."""
+    store, _, _, ls = version
+    with pytest.raises(DataError, match='no INSTANCE_MASK label set') as e:
+        YOLO.export(store, 'parts', 1, tmp_path / 'out', {'task': 'segment'})
+    assert e.value.code == 'EXPORT_REFUSED' and not (tmp_path / 'out').exists()
+    with pytest.raises(DataError, match='not a INSTANCE_MASK label set') as e:
+        YOLO.export(store, 'parts', 1, tmp_path / 'out', {'task': 'segment', 'label_sets': [ls.label_set_id]})
+    with pytest.raises(DataError, match='options of task segment') as e:
+        YOLO.export(store, 'parts', 1, tmp_path / 'out', {'epsilon_px': 2.0})
     assert e.value.code == 'EXPORT_REFUSED' and not (tmp_path / 'out').exists()
 
 

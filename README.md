@@ -9,7 +9,7 @@ pre-recorded data all become the SAME canonical records:
 - immutable dataset versions;
 - export to training formats.
 
-**Status: version 0.9.0 (slices D0.1 - D0.9: the complete D0 Data Foundation).**
+**Status: version 0.10.0 (slices D0.1 - D0.9: the complete D0 Data Foundation; M4.5: YOLO segmentation export).**
 - D0.1, the pure-Python core: the record contracts, the vocabulary, the local store, the crash-safe session
   writer, `verify` / `recover`, and the `trainit-data` CLI.
 - D0.2 - D0.5, `trainit_data_ros`: the live recorder over the ROS camera contract (mock, Isaac, the physical
@@ -26,7 +26,9 @@ pre-recorded data all become the SAME canonical records:
   The shipped vocabulary has no `vector` / `imu` row: a deployment that records one adds the rows (IMU recording is
   not available out of the box). A new calibration must hold a calibrated camera matrix (an all-zero or REP-104
   uncalibrated K is refused); a stored one stays readable and `verify` flags it.
-- Not yet: EPISODES and high-rate series (D1), LeRobot (D3), YOLO segmentation export, COCO.
+- M4.5 (0.10.0): `trainit-data export yolo --task segment`, the YOLO segmentation export of INSTANCE_MASK label
+  sets (exporter `yolo` 1.1; see "Exporting a dataset version" below).
+- Not yet: EPISODES and high-rate series (D1), LeRobot (D3), YOLO segmentation label import, COCO.
 
 ## Install
 
@@ -129,6 +131,41 @@ ros2 run trainit_data_ros replay --ros-args -p session_id:=<id>   # a sealed ses
 The recording configuration (`trainit-recording/1.0`) holds only what the user chose; the recorder resolves every
 default (topics and frames from the camera contract and the hardware profile, the sync tolerance from the frame
 rate) and stores the effective configuration in the session.
+
+## Exporting a dataset version
+
+```bash
+trainit-data export yolo DATASET VERSION DEST                      # detection: BBOX_2D label sets
+trainit-data export yolo DATASET VERSION DEST --task segment \
+    [--epsilon-px 0.5] [--min-area-px 16] [--label-set ls-...]      # segmentation: INSTANCE_MASK label sets
+trainit-data verify-export DEST                                    # hashes, counts, label validity, data.yaml;
+                                                                   # with the store: regenerated and compared
+```
+
+`DEST` is a missing or empty directory outside every repository and the store. The layout is Ultralytics':
+`images/<split>/<stem>.png` (the canonical payload, byte for byte), `labels/<split>/<stem>.txt`, `data.yaml`, and
+the sidecar `trainit_export.json` (exporter name, version and config, the source version, label sets and split
+pinned by hash, every file's sha256). Two exports of the same version and config are byte-identical.
+
+**Segmentation** (`--task segment`, exporter `yolo` 1.1): one line `<class> x1 y1 x2 y2 ...` per instance,
+normalized, 6 decimals. The polygon policy (`largest_component_outer_boundary` v1, pure numpy, no cv2) is
+deterministic:
+- per instance id of the mask, the LARGEST 8-connected component is kept (a tie goes to the first in raster order);
+  the other components are dropped and counted;
+- its OUTER boundary is traced (holes are ignored: a YOLO polygon has none, a ring exports filled);
+- Douglas-Peucker with `epsilon_px` (default 0.5) simplifies it, with exact integer arithmetic;
+- vertices are the PIXEL CENTRES of boundary pixels: `(col + 0.5) / W`, `(row + 0.5) / H`, so a rasterizer that
+  truncates to integers and fills the polygon (Ultralytics' `polygon2mask`) gets the boundary pixels back;
+- an instance whose kept component has fewer than `min_area_px` pixels (default 16), or whose polygon is
+  degenerate (a one-pixel line), is dropped; an image whose every instance is dropped exports an empty label file;
+- a mask id without a class in the label set is refused (`EXPORT_REFUSED`).
+
+The default epsilon keeps a round-trip IoU >= 0.95 on discs of radius >= 10 px (1.0 would drop to ~0.92).
+`epsilon_px` and `min_area_px` are part of the config (and of the export id). The sidecar's `summary.polygons`
+records the policy with its parameters, the instances seen and exported, the vertices, the multi-component
+instances with the dropped components and their pixels, and every dropped instance with its reason. An export made by
+`yolo` 1.0 still verifies on its own files; against the store `verify-export` warns that this core (1.1) cannot
+regenerate it.
 
 ## Data never lives in this repository
 

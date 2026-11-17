@@ -17,9 +17,9 @@ two runs produce byte-identical trees. An export is written into a sibling worki
 when complete, so a destination holds a whole export or nothing.
 
 This module is format-neutral: the destination rules, the export plan and its streamed writer, the sidecar and
-``verify_export``. The formats themselves (YOLO detection in D0.6) live in ``trainit_data.formats``, register there by
-name, and only PLAN an export (``plan(store, dataset, version, config) -> ExportPlan``): what to write is decided by
-the format, how it is written and checked is decided here, once.
+``verify_export``. The formats themselves (YOLO detection in D0.6, YOLO segmentation in M4.5) live in
+``trainit_data.formats``, register there by name, and only PLAN an export (``plan(store, dataset, version, config)
+-> ExportPlan``): what to write is decided by the format, how it is written and checked is decided here, once.
 """
 import os
 import re
