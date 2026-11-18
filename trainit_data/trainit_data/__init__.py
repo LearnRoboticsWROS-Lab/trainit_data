@@ -56,4 +56,4 @@ segmentation (COCO, LeRobot: later slices), and any training framework. Live ROS
 package ``trainit_data_ros`` (D0.2).
 """
 
-__version__ = '0.10.0'
+__version__ = '0.10.1'

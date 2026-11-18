@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>trainit_data</name>
-  <version>0.10.0</version>
+  <version>0.10.1</version>
   <description>
     TrainIt Data Foundation, the canonical core (ADR-0029). TrainIt's persisted data contracts --
     observations, captures, sessions, calibration records, dataset versions, labels, splits, exports --

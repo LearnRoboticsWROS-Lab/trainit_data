@@ -116,6 +116,49 @@ def test_a_new_runner_start_supersedes_a_run_that_never_ended_and_closes_it():
     assert gate.admit(event('TASK_ENTERED', seq=2, run='run-b', task='t'), now) is None
 
 
+def test_e1_sequential_job_runs_of_one_task_server_are_each_adopted():
+    """P0.a case E1 (ADR-0030 Amendment P0): a robot task server makes ONE run per job in ONE process -- run ids
+    "<server session>-<job counter>", seq from 1 in each, RUN_ENDED before the next RUN_STARTED. Every run is adopted
+    from its own RUN_STARTED, none is a superseded crash, nothing is refused."""
+    gate = X.EventGate(START, MISMATCH)
+    at = START + SEC
+    for n in (1, 2, 3):
+        run = f'0a1b2c3d-{n}'
+        assert gate.admit(event('RUN_STARTED', seq=1, run=run, at=at), at) is None
+        assert gate.admit(event('TASK_ENTERED', seq=2, run=run, task='home', at=at + 1), at + 1) is None
+        assert gate.admit(event('TASK_EXITED', seq=3, run=run, task='home', status='SUCCEEDED', at=at + 2),
+                          at + 2) is None
+        assert gate.admit(event('RUN_ENDED', seq=4, run=run, status='SUCCEEDED', at=at + 3), at + 3) is None
+        assert gate.open_run is None
+        at += SEC
+    assert gate.admitted == 12 and gate.superseded == 0 and sum(gate.refused.values()) == 0
+
+
+def test_e1_real_execution_events_carrying_the_p0a_job_fields_convert_and_are_adopted():
+    """P0.a case E1 with the REAL message type (trainit_interfaces >= 0.4.0): the appended ``job_id`` /
+    ``result_code`` of a task server's runs do not disturb event_from_message nor the gate -- three sequential runs,
+    each adopted from its own RUN_STARTED (the data layer does not need the job fields: ADR-0030 Amendment P0)."""
+    msgs = pytest.importorskip('trainit_interfaces.msg', reason='needs a built trainit_interfaces >= 0.4.0')
+    E = msgs.ExecutionEvent
+    assert hasattr(E(), 'job_id') and hasattr(E(), 'result_code'), 'trainit_interfaces < 0.4.0'
+    gate = X.EventGate(START, MISMATCH)
+    sec = START // SEC + 1
+    for n in (1, 2, 3):
+        for seq, (kind, status, task, code) in enumerate(((E.RUN_STARTED, E.STATUS_NONE, '', 0),
+                                                          (E.TASK_ENTERED, E.STATUS_NONE, 'home', 0),
+                                                          (E.TASK_EXITED, E.SUCCEEDED, 'home', 100),
+                                                          (E.RUN_ENDED, E.SUCCEEDED, '', 100)), 1):
+            m = E()
+            m.header.stamp.sec, m.header.stamp.nanosec = sec, seq
+            m.run_id, m.seq, m.kind, m.status, m.task_id = f'0a1b2c3d-{n}', seq, kind, status, task
+            m.job_id, m.result_code = n, code
+            e = X.event_from_message(m)
+            assert e['run_id'] == f'0a1b2c3d-{n}' and e['seq'] == seq
+            assert gate.admit(e, sec * SEC + seq) is None, (n, seq)
+        sec += 1
+    assert gate.admitted == 12 and gate.superseded == 0 and sum(gate.refused.values()) == 0
+
+
 def test_an_event_of_an_ended_run_or_a_repeat_is_refused():
     gate = X.EventGate(START, MISMATCH)
     now = START + 2 * SEC
