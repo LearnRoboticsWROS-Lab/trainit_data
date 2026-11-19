@@ -13,7 +13,8 @@ Trigger configuration (validated here, written in the recording configuration)::
        context: {pick_attempt: {phase: pre_grasp}}}                          # pre_grasp | post_grasp
 
 - EVENT: a PROCESS_EVENT on the LOGICAL channel (never a topic). ``rising`` = ``process_on``, ``falling`` =
-  ``process_off``, ``any`` = every process event of the channel (``set_value`` and ``external`` included).
+  ``process_off``, ``any`` = every process event of the channel (``set_value``, ``external`` and, since 0.10.2, a
+  machine-service ``request`` -- P0.b: the runner writes a request on a machine service -- included).
 - APPLICATION_STATE: the canonical task (its name) and, optionally, the canonical step id (D18). Without a step
   it is the TASK's transition, with one the STEP's. ``enter`` = entered; ``exit`` = exited, however (succeeded,
   failed or halted); ``succeeded`` / ``failed`` = exited so.
@@ -38,7 +39,7 @@ EVENT_KINDS = {1: 'RUN_STARTED', 2: 'RUN_ENDED', 3: 'TASK_ENTERED', 4: 'TASK_EXI
                6: 'STEP_EXITED', 7: 'PROCESS_EVENT'}
 STATUSES = {0: None, 1: 'SUCCEEDED', 2: 'FAILED', 3: 'HALTED'}
 EDGES = {'rising': ('process_on',), 'falling': ('process_off',),
-         'any': ('process_on', 'process_off', 'set_value', 'external')}
+         'any': ('process_on', 'process_off', 'set_value', 'external', 'request')}
 TRANSITIONS = ('enter', 'exit', 'succeeded', 'failed')
 PHASES = {'pre_grasp': ('enter',), 'post_grasp': ('exit', 'succeeded', 'failed')}
 REFUSALS = ('STALE_EVENT', 'CLOCK_MISMATCH', 'CLOCK_UNAVAILABLE', 'UNSTARTED_RUN', 'AMBIGUOUS_RUN', 'ENDED_RUN',

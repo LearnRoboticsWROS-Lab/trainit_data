@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>trainit_data_ros</name>
-  <version>0.10.1</version>
+  <version>0.10.2</version>
   <description>
     TrainIt Data Foundation, live acquisition (ADR-0029): the recorder that reads the ROS camera
     contract of trainit_hardware_layer (mock / Isaac / real alike) and writes trainit_data's canonical

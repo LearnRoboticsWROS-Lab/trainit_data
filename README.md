@@ -9,7 +9,8 @@ pre-recorded data all become the SAME canonical records:
 - immutable dataset versions;
 - export to training formats.
 
-**Status: version 0.10.0 (slices D0.1 - D0.9: the complete D0 Data Foundation; M4.5: YOLO segmentation export).**
+**Status: version 0.10.2 (slices D0.1 - D0.9: the complete D0 Data Foundation; M4.5: YOLO segmentation export;
+P0.a / P0.b: the robot task server's job runs and its machine-service requests).**
 - D0.1, the pure-Python core: the record contracts, the vocabulary, the local store, the crash-safe session
   writer, `verify` / `recover`, and the `trainit-data` CLI.
 - D0.2 - D0.5, `trainit_data_ros`: the live recorder over the ROS camera contract (mock, Isaac, the physical
@@ -28,6 +29,10 @@ pre-recorded data all become the SAME canonical records:
   uncalibrated K is refused); a stored one stays readable and `verify` flags it.
 - M4.5 (0.10.0): `trainit-data export yolo --task segment`, the YOLO segmentation export of INSTANCE_MASK label
   sets (exporter `yolo` 1.1; see "Exporting a dataset version" below).
+- P0.a (0.10.1): `trainit_data_ros` follows `trainit_interfaces` 0.4.0 (ExecutionEvent `job_id` / `result_code`): every
+  job run of a robot task server is adopted from its own RUN_STARTED.
+- P0.b (0.10.2): a machine-service `request` PROCESS_EVENT is admitted and fires an `edge: any` EVENT trigger on its
+  channel (`rising` / `falling` never: a request is not a process switching on or off).
 - Not yet: EPISODES and high-rate series (D1), LeRobot (D3), YOLO segmentation label import, COCO.
 
 ## Install

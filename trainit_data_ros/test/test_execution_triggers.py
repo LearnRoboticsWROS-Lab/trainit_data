@@ -159,6 +159,53 @@ def test_e1_real_execution_events_carrying_the_p0a_job_fields_convert_and_are_ad
     assert gate.admitted == 12 and gate.superseded == 0 and sum(gate.refused.values()) == 0
 
 
+def test_e2_a_machine_request_process_event_is_admitted_and_fires_an_any_trigger():
+    """P0.b case E2 (assumption A-B6): a PROCESS_EVENT of kind ``request`` -- the runner wrote a machine-service
+    request -- is admitted like every process event, never refused or crashing, and an ``edge: any`` trigger on its
+    channel fires on it (``rising`` / ``falling`` never: a request is not a process switching on or off). The identified
+    request / wait steps' STEP_* events fire APPLICATION_STATE triggers as any step does (step kind ``wait``)."""
+    gate = X.EventGate(START, MISMATCH)
+    started(gate)
+    at = START + SEC
+    request = event('PROCESS_EVENT', seq=2, at=at, task='turn_part', step='ask_turn', step_kind='process',
+                    channel='turner', process_kind='request')
+    assert gate.admit(request, at) is None
+    (any_t, rising_t) = triggers({'id': 'a', 'kind': 'EVENT', 'process_channel': 'turner', 'edge': 'any'},
+                                 {'id': 'r', 'kind': 'EVENT', 'process_channel': 'turner', 'edge': 'rising'})
+    assert X.matches(any_t, request) and not X.matches(rising_t, request)
+    waited = event('STEP_EXITED', seq=3, at=at + 1, task='turn_part', step='turned', step_kind='wait',
+                   status='SUCCEEDED')
+    assert gate.admit(waited, at + 1) is None
+    (done_t,) = triggers({'id': 'd', 'kind': 'APPLICATION_STATE', 'task': 'turn_part', 'step': 'turned',
+                          'transition': 'succeeded'})
+    assert X.matches(done_t, waited)
+    assert gate.admitted == 3 and sum(gate.refused.values()) == 0
+
+
+def test_e2_the_real_message_with_a_request_converts_and_is_admitted():
+    """P0.b case E2 with the REAL message type (trainit_interfaces >= 0.5.0 documents the ``request`` kind; the
+    field layout is 0.4.0's): event_from_message keeps the kind verbatim and the gate admits it."""
+    msgs = pytest.importorskip('trainit_interfaces.msg', reason='needs a built trainit_interfaces >= 0.4.0')
+    E = msgs.ExecutionEvent
+    gate = X.EventGate(START, MISMATCH)
+    sec = START // SEC + 1
+    for seq, (kind, kwargs) in enumerate(((E.RUN_STARTED, {}),
+                                          (E.PROCESS_EVENT, dict(task_id='turn_part', step_id='ask_turn',
+                                                                 step_kind='process', process_channel='turner',
+                                                                 process_kind='request')),
+                                          (E.RUN_ENDED, dict(status=E.SUCCEEDED))), 1):
+        m = E()
+        m.header.stamp.sec, m.header.stamp.nanosec = sec, seq
+        m.run_id, m.seq, m.kind = 'run-p0b', seq, kind
+        for key, value in kwargs.items():
+            setattr(m, key, value)
+        e = X.event_from_message(m)
+        if kind == E.PROCESS_EVENT:
+            assert e['process_kind'] == 'request' and e['process_channel'] == 'turner' and e['step_id'] == 'ask_turn'
+        assert gate.admit(e, sec * SEC + seq) is None, seq
+    assert gate.admitted == 3 and sum(gate.refused.values()) == 0
+
+
 def test_an_event_of_an_ended_run_or_a_repeat_is_refused():
     gate = X.EventGate(START, MISMATCH)
     now = START + 2 * SEC
@@ -205,10 +252,11 @@ def test_an_unknown_kind_from_a_newer_runner_is_malformed_never_guessed():
 # ---- matching -------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize('edge, kinds', [('rising', {'process_on'}), ('falling', {'process_off'}),
-                                         ('any', {'process_on', 'process_off', 'set_value', 'external'})])
+                                         ('any', {'process_on', 'process_off', 'set_value', 'external',
+                                                  'request'})])
 def test_an_event_trigger_matches_its_channel_and_edge(edge, kinds):
     (trigger,) = triggers({'id': 't', 'kind': 'EVENT', 'process_channel': 'glue', 'edge': edge})
-    for kind in ('process_on', 'process_off', 'set_value', 'external'):
+    for kind in ('process_on', 'process_off', 'set_value', 'external', 'request'):
         assert X.matches(trigger, event('PROCESS_EVENT', channel='glue', process_kind=kind)) == (kind in kinds)
     assert not X.matches(trigger, event('PROCESS_EVENT', channel='other', process_kind='process_on'))
     assert not X.matches(trigger, event('STEP_ENTERED', task='t', step='glue', step_kind='process'))

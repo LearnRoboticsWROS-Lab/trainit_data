@@ -18,7 +18,7 @@ providers = ([('share/' + package_name + '/synthetic_providers/isaac_replicator_
 # provider environment uses the canonical data contracts without the ROS tree (ADR-0029 Decision 1).
 setup(
     name=package_name,
-    version='0.10.1',
+    version='0.10.2',
     packages=find_packages(exclude=['test']),
     package_data={package_name: ['vocab_data/*.json']},
     data_files=[

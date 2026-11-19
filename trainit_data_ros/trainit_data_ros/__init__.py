@@ -13,4 +13,4 @@ diagnostics) and ``replay`` (a sealed session back onto the camera contract). Th
 ``recording_config``, ``coordinator``, ``conversions``, ``writer_worker`` -- are unit-tested without a graph.
 """
 
-__version__ = '0.10.1'
+__version__ = '0.10.2'
